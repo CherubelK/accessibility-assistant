@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+
+# Downloaded model weights -- large binaries, not source. Re-fetched via
+# requirements.txt comments (Ollama) and models/download_voices.sh (Piper).
+models/piper/*.onnx
+models/piper/*.onnx.json
+
+# Phase 3+ generated artifacts
+samples/*.png
+samples/*.jpg
+*.wav
+*.mp3
