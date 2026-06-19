@@ -14,3 +14,7 @@ samples/*.png
 samples/*.jpg
 *.wav
 *.mp3
+
+# PyInstaller build output (regenerate with: pyinstaller desktop.spec)
+build/
+dist/

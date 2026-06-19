@@ -409,7 +409,11 @@ it, you've learned it.
 - **Test in the real languages.** Quality varies by language. Validate with the
   languages and document types your actual users face.
 - **One model at a time.** Respect the hardware. Let Ollama load/unload; don't
-  try to hold vision + text + speech models in RAM simultaneously.
+  try to hold vision + text + speech models in RAM simultaneously. This
+  isn't automatic -- Ollama will keep multiple models resident if there's
+  room, which causes severe slowdown from memory pressure (observed 84s vs.
+  17s for the same request). Set `OLLAMA_MAX_LOADED_MODELS=1` (see README)
+  to enforce it.
 - **Swap models freely.** Model choice is one line. Iterate fast on `phi4-mini`,
   validate quality on `qwen3:8b` / `gemma3:12b`.
 

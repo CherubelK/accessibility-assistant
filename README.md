@@ -29,6 +29,14 @@ together.
    bash models/download_voices.sh
    ```
 5. Copy `.env.example` to `.env` if you want to override any defaults.
+6. **Set `OLLAMA_MAX_LOADED_MODELS=1`** as a system/user environment
+   variable, then restart Ollama. Without this, Ollama will keep multiple
+   models resident in RAM simultaneously if there's room (e.g. `phi4-mini` +
+   `gemma3:12b` together still fit under 16GB), which causes severe slowdown
+   from memory pressure -- observed 84s for a request that takes 17s with
+   only one model loaded. This setting makes Ollama strictly swap one model
+   out before loading another, matching this project's "one model at a
+   time" design assumption (see PROJECT_PLAN.md).
 
 ## Run
 
@@ -48,6 +56,34 @@ target language and get a plain-language explanation back, spoken aloud.
 
 Runs the same homepage in a native window instead of a browser tab --
 the first step toward a downloadable desktop app.
+
+### As a standalone .exe (no Python install required)
+
+```
+.venv\Scripts\python.exe -m pip install pyinstaller
+.venv\Scripts\python.exe -m PyInstaller desktop.spec --noconfirm
+dist\AccessibilityAssistant\AccessibilityAssistant.exe
+```
+
+Produces `dist/AccessibilityAssistant/` -- copy that whole folder to share
+it; the `.exe` inside is the entry point. It still needs Ollama installed
+and running on the target machine (that part isn't bundled), but no
+Python/pip/venv is required to run it.
+
+Two non-obvious things had to be fixed to get this working (see comments in
+`src/desktop.py` and `desktop.spec` for details, in case Streamlit's
+internals change again in a future version):
+- Streamlit loads `app.py` dynamically at runtime, not via a Python
+  `import`, so PyInstaller's static analysis can't see its dependencies --
+  every module `app.py` needs has to be listed explicitly as a hidden
+  import in `desktop.spec`.
+- Streamlit decides whether to serve its own static assets based on an
+  "am I installed normally" heuristic that checks for `"site-packages"` in
+  its own file path. PyInstaller relocates everything into `_internal/`,
+  so that heuristic always misfires once frozen -- silently disabling the
+  static file routes and returning 404 for everything, including the
+  homepage itself. Fixed by explicitly forcing `global_developmentMode`
+  off via `bootstrap.load_config_options()` before starting the server.
 
 ## Supported languages
 

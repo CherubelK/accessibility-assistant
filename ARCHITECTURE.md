@@ -36,8 +36,8 @@ flowchart TD
 |---|---|---|---|
 | `phi4-mini` | Fast text simplify/translate (dev loop) | `src/nodes/simplify.py` | one at a time |
 | `qwen3:8b` | Higher-quality text simplify/translate | `src/nodes/simplify.py` (swap-in) | one at a time |
-| `gemma3:12b` | Vision — reads screenshot layout/content | `src/nodes/read_screen.py` | one at a time |
-| Tesseract OCR | Exact text extraction, paired with vision | `src/nodes/read_screen.py` | n/a (CPU, not a model) |
+| `gemma3:12b` | Vision — reads screenshot layout/content. **Only called when OCR comes up short** (fallback, not the default path) -- it's ~1-2 minutes on CPU vs. OCR's near-instant, so OCR alone is used whenever it extracts enough text | `src/nodes/read_screen.py` | one at a time |
+| Tesseract OCR | Exact text extraction; the primary/fast path for `read_screen.py` | `src/nodes/read_screen.py` | n/a (CPU, not a model) |
 | faster-whisper | Speech-to-text (mic → `user_request`) | `src/nodes/speech_in.py` | one at a time |
 | Piper | Text-to-speech (`simplified_text` → audio) | `src/nodes/speech_out.py` | one at a time |
 

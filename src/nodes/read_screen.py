@@ -21,19 +21,15 @@ if shutil.which("tesseract") is None:
     pytesseract.pytesseract.tesseract_cmd = default_win_path
 
 
-def read_screen_node(state: AssistantState) -> dict:
-    print(f"[read_screen] state in: {state}")
+# Below this many OCR characters, assume the screen is mostly non-text
+# (e.g. a photo, icon-heavy UI) and it's worth the slow vision call. Above
+# it, OCR alone is enough -- and it's near-instant vs. ~1-2 minutes for the
+# vision model on CPU, which matters a lot for a "read my screen" feature
+# that's supposed to feel responsive.
+MIN_OCR_CHARS_TO_SKIP_VISION = 40
 
-    screenshot_path = state["screenshot_path"]
-    language = state.get("target_language", "Spanish")
 
-    try:
-        ocr_text = pytesseract.image_to_string(Image.open(screenshot_path)).strip()
-    except Exception as exc:
-        ocr_text = None
-        print(f"[read_screen] OCR failed, continuing with vision only: {exc}")
-
-    vision_text = None
+def _read_with_vision(screenshot_path: str) -> str | None:
     try:
         with open(screenshot_path, "rb") as f:
             image_b64 = base64.b64encode(f.read()).decode()
@@ -49,9 +45,30 @@ def read_screen_node(state: AssistantState) -> dict:
             },
             {"type": "image", "base64": image_b64, "mime_type": "image/png"},
         ])
-        vision_text = vision.invoke([message]).content
+        return vision.invoke([message]).content
     except Exception as exc:
-        print(f"[read_screen] vision failed, falling back to OCR only: {exc}")
+        print(f"[read_screen] vision failed: {exc}")
+        return None
+
+
+def read_screen_node(state: AssistantState) -> dict:
+    print(f"[read_screen] state in: {state}")
+
+    screenshot_path = state["screenshot_path"]
+    language = state.get("target_language", "Spanish")
+
+    try:
+        ocr_text = pytesseract.image_to_string(Image.open(screenshot_path)).strip()
+    except Exception as exc:
+        ocr_text = None
+        print(f"[read_screen] OCR failed: {exc}")
+
+    vision_text = None
+    if not ocr_text or len(ocr_text) < MIN_OCR_CHARS_TO_SKIP_VISION:
+        print("[read_screen] OCR text too short/empty, falling back to vision (slow)")
+        vision_text = _read_with_vision(screenshot_path)
+    else:
+        print(f"[read_screen] OCR got {len(ocr_text)} chars, skipping vision call for speed")
 
     if not vision_text and not ocr_text:
         return {"error": GENERIC_ERROR_MESSAGES.get(language, GENERIC_ERROR_MESSAGES["English"])}

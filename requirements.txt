@@ -34,5 +34,9 @@ streamlit==1.58.0
 # downloadable desktop app instead of a browser tab
 pywebview==6.2.1
 
+# Standalone .exe packaging (optional, only needed to build dist/ yourself --
+# see README "As a standalone .exe"). Not needed just to run the app.
+pyinstaller==6.21.0
+
 # Tests
 pytest==9.1.0
