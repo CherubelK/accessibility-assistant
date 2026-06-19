@@ -6,6 +6,7 @@ from faster_whisper import WhisperModel
 from scipy.io.wavfile import write as write_wav
 
 from src.config import GENERIC_ERROR_MESSAGES, LANGUAGES, NO_SPEECH_DETECTED_MESSAGES, WHISPER_MODEL_SIZE
+from src.nodes._timing import timed_node
 from src.state import AssistantState
 
 SAMPLE_RATE = 16000
@@ -28,6 +29,7 @@ def record_audio(seconds: float = 6.0) -> str:
     return path
 
 
+@timed_node("speech_in")
 def speech_in_node(state: AssistantState) -> dict:
     print(f"[speech_in] state in: {state}")
 

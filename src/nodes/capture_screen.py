@@ -4,9 +4,11 @@ import time
 import mss
 
 from src.config import GENERIC_ERROR_MESSAGES
+from src.nodes._timing import timed_node
 from src.state import AssistantState
 
 
+@timed_node("capture_screen")
 def capture_screen_node(state: AssistantState) -> dict:
     print(f"[capture_screen] state in: {state}")
 

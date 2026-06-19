@@ -1,5 +1,6 @@
 import base64
 import shutil
+import time
 
 import pytesseract
 from langchain_core.messages import HumanMessage
@@ -7,6 +8,7 @@ from langchain_ollama import ChatOllama
 from PIL import Image
 
 from src.config import GENERIC_ERROR_MESSAGES, VISION_MODEL
+from src.nodes._timing import timed_node
 from src.state import AssistantState
 
 # num_predict caps the response length -- vision models on CPU can otherwise
@@ -51,22 +53,27 @@ def _read_with_vision(screenshot_path: str) -> str | None:
         return None
 
 
+@timed_node("read_screen")
 def read_screen_node(state: AssistantState) -> dict:
     print(f"[read_screen] state in: {state}")
 
     screenshot_path = state["screenshot_path"]
     language = state.get("target_language", "Spanish")
 
+    ocr_start = time.time()
     try:
         ocr_text = pytesseract.image_to_string(Image.open(screenshot_path)).strip()
     except Exception as exc:
         ocr_text = None
         print(f"[read_screen] OCR failed: {exc}")
+    print(f"[read_screen] OCR took {time.time() - ocr_start:.1f}s")
 
     vision_text = None
     if not ocr_text or len(ocr_text) < MIN_OCR_CHARS_TO_SKIP_VISION:
         print("[read_screen] OCR text too short/empty, falling back to vision (slow)")
+        vision_start = time.time()
         vision_text = _read_with_vision(screenshot_path)
+        print(f"[read_screen] vision call took {time.time() - vision_start:.1f}s")
     else:
         print(f"[read_screen] OCR got {len(ocr_text)} chars, skipping vision call for speed")
 

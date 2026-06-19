@@ -61,6 +61,13 @@ models in parallel.
 optional `speech_out` step runs after `simplify` if `speak_output` is set
 (`route_after_simplify`), matching the diagram in `PROJECT_PLAN.md`.
 
+Every node is wrapped with `@timed_node(...)` (`src/nodes/_timing.py`),
+which prints how long it took, e.g. `[simplify] took 7.6s`. `read_screen.py`
+additionally prints OCR time and vision time separately. This is what
+should be checked first whenever something feels slow -- it'll show
+immediately whether the bottleneck is a particular node, rather than
+needing to manually watch CPU usage to guess.
+
 ## Session memory
 
 The graph is compiled with an `InMemorySaver` checkpointer

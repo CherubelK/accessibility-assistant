@@ -3,6 +3,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
 
 from src.config import DEFAULT_TEXT_MODEL, GENERIC_ERROR_MESSAGES
+from src.nodes._timing import timed_node
 from src.state import AssistantState
 
 llm = ChatOllama(model=DEFAULT_TEXT_MODEL, temperature=0.2)
@@ -20,6 +21,7 @@ prompt = ChatPromptTemplate.from_messages([
 chain = prompt | llm | StrOutputParser()
 
 
+@timed_node("simplify")
 def simplify_node(state: AssistantState) -> dict:
     print(f"[simplify] state in: { {k: v for k, v in state.items() if k != 'raw_screen_text'} }")
 

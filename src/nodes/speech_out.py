@@ -5,6 +5,7 @@ import sounddevice as sd
 from piper import PiperVoice
 
 from src.config import has_voice, piper_model_path
+from src.nodes._timing import timed_node
 from src.state import AssistantState
 
 _voice_cache: dict[str, PiperVoice] = {}
@@ -43,6 +44,7 @@ def play_wav(path: str) -> None:
     sd.wait()
 
 
+@timed_node("speech_out")
 def speech_out_node(state: AssistantState) -> dict:
     print(f"[speech_out] state in: { {k: v for k, v in state.items() if k != 'raw_screen_text'} }")
 
