@@ -2,7 +2,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
 
-from src.config import DEFAULT_TEXT_MODEL
+from src.config import DEFAULT_TEXT_MODEL, GENERIC_ERROR_MESSAGES
 from src.state import AssistantState
 
 llm = ChatOllama(model=DEFAULT_TEXT_MODEL, temperature=0.2)
@@ -27,10 +27,14 @@ def simplify_node(state: AssistantState) -> dict:
     language = state.get("target_language", "Spanish")
 
     if not text:
-        return {"error": "No text available to simplify."}
+        return {"error": GENERIC_ERROR_MESSAGES.get(language, GENERIC_ERROR_MESSAGES["English"])}
 
-    simplified = chain.invoke({"language": language, "source_text": text})
+    try:
+        simplified = chain.invoke({"language": language, "source_text": text})
+    except Exception as exc:
+        print(f"[simplify] failed: {exc}")
+        return {"error": GENERIC_ERROR_MESSAGES.get(language, GENERIC_ERROR_MESSAGES["English"])}
+
     result = {"simplified_text": simplified}
-
     print(f"[simplify] state out: {result}")
     return result

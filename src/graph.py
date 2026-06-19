@@ -24,9 +24,20 @@ def route_start(state: AssistantState) -> str:
 
 
 def route_after_simplify(state: AssistantState) -> str:
+    if state.get("error"):
+        return END
     if state.get("speak_output"):
         return "speech_out"
     return END
+
+
+def route_unless_error(next_node: str):
+    """A node that fails sets state['error'] instead of raising (so it shows
+    a translated message instead of a crash). If it did, stop here rather
+    than feeding a missing/partial result into the next node."""
+    def _route(state: AssistantState) -> str:
+        return END if state.get("error") else next_node
+    return _route
 
 
 builder = StateGraph(AssistantState)
@@ -39,9 +50,9 @@ builder.add_node("speech_out", speech_out_node)
 builder.add_conditional_edges(
     START, route_start, ["capture_screen", "read_screen", "speech_in", "simplify"]
 )
-builder.add_edge("capture_screen", "read_screen")
-builder.add_edge("read_screen", "simplify")
-builder.add_edge("speech_in", "simplify")
+builder.add_conditional_edges("capture_screen", route_unless_error("read_screen"), ["read_screen", END])
+builder.add_conditional_edges("read_screen", route_unless_error("simplify"), ["simplify", END])
+builder.add_conditional_edges("speech_in", route_unless_error("simplify"), ["simplify", END])
 builder.add_conditional_edges("simplify", route_after_simplify, ["speech_out", END])
 builder.add_edge("speech_out", END)
 

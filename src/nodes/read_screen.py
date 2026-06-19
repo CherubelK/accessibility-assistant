@@ -6,7 +6,7 @@ from langchain_core.messages import HumanMessage
 from langchain_ollama import ChatOllama
 from PIL import Image
 
-from src.config import VISION_MODEL
+from src.config import GENERIC_ERROR_MESSAGES, VISION_MODEL
 from src.state import AssistantState
 
 # num_predict caps the response length -- vision models on CPU can otherwise
@@ -25,6 +25,7 @@ def read_screen_node(state: AssistantState) -> dict:
     print(f"[read_screen] state in: {state}")
 
     screenshot_path = state["screenshot_path"]
+    language = state.get("target_language", "Spanish")
 
     try:
         ocr_text = pytesseract.image_to_string(Image.open(screenshot_path)).strip()
@@ -32,26 +33,33 @@ def read_screen_node(state: AssistantState) -> dict:
         ocr_text = None
         print(f"[read_screen] OCR failed, continuing with vision only: {exc}")
 
-    with open(screenshot_path, "rb") as f:
-        image_b64 = base64.b64encode(f.read()).decode()
+    vision_text = None
+    try:
+        with open(screenshot_path, "rb") as f:
+            image_b64 = base64.b64encode(f.read()).decode()
 
-    message = HumanMessage(content=[
-        {
-            "type": "text",
-            "text": (
-                "Read this screen and describe what it says and what the user "
-                "is being asked to do. Be literal -- do not infer or invent "
-                "details that are not visible."
-            ),
-        },
-        {"type": "image", "base64": image_b64, "mime_type": "image/png"},
-    ])
-    vision_result = vision.invoke([message])
+        message = HumanMessage(content=[
+            {
+                "type": "text",
+                "text": (
+                    "Read this screen and describe what it says and what the user "
+                    "is being asked to do. Be literal -- do not infer or invent "
+                    "details that are not visible."
+                ),
+            },
+            {"type": "image", "base64": image_b64, "mime_type": "image/png"},
+        ])
+        vision_text = vision.invoke([message]).content
+    except Exception as exc:
+        print(f"[read_screen] vision failed, falling back to OCR only: {exc}")
 
-    raw_screen_text = vision_result.content
+    if not vision_text and not ocr_text:
+        return {"error": GENERIC_ERROR_MESSAGES.get(language, GENERIC_ERROR_MESSAGES["English"])}
+
+    raw_screen_text = vision_text or ""
     if ocr_text:
         raw_screen_text += f"\n\n--- Exact OCR text ---\n{ocr_text}"
 
-    result = {"raw_screen_text": raw_screen_text, "ocr_text": ocr_text}
+    result = {"raw_screen_text": raw_screen_text.strip(), "ocr_text": ocr_text}
     print(f"[read_screen] state out: { {k: v for k, v in result.items()} }")
     return result

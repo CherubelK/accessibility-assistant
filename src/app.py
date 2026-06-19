@@ -2,7 +2,7 @@ import uuid
 
 import streamlit as st
 
-from src.config import LANGUAGES
+from src.config import GENERIC_ERROR_MESSAGES, LANGUAGES, has_voice
 from src.graph import graph
 from src.nodes.simplify import chain as simplify_chain
 from src.nodes.speech_out import play_wav, synthesize_to_wav
@@ -45,7 +45,8 @@ def run_graph(initial_state: dict, request_summary: str) -> None:
     try:
         out = graph.invoke(initial_state, config=graph_config)
     except Exception as exc:
-        st.session_state.error = f"Something went wrong and was not your fault: {exc}"
+        print(f"[app] graph.invoke failed: {exc}")
+        st.session_state.error = GENERIC_ERROR_MESSAGES.get(language, GENERIC_ERROR_MESSAGES["English"])
         return
 
     if out.get("error"):
@@ -69,10 +70,11 @@ with tab_text:
                 simplify_chain.stream({"language": language, "source_text": text})
             )
         except Exception as exc:
-            st.session_state.error = f"Something went wrong and was not your fault: {exc}"
+            print(f"[app] simplify streaming failed: {exc}")
+            st.session_state.error = GENERIC_ERROR_MESSAGES.get(language, GENERIC_ERROR_MESSAGES["English"])
         else:
             placeholder.empty()
-            audio_path = synthesize_to_wav(full_text, language)
+            audio_path = synthesize_to_wav(full_text, language) if has_voice(language) else None
             st.session_state.result = {"simplified_text": full_text, "audio_path": audio_path}
             record_history(text, full_text)
 

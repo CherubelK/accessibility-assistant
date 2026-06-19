@@ -4,7 +4,7 @@ import wave
 import sounddevice as sd
 from piper import PiperVoice
 
-from src.config import piper_model_path
+from src.config import has_voice, piper_model_path
 from src.state import AssistantState
 
 _voice_cache: dict[str, PiperVoice] = {}
@@ -49,8 +49,18 @@ def speech_out_node(state: AssistantState) -> dict:
     text = state["simplified_text"]
     language = state.get("target_language", "Spanish")
 
-    audio_path = synthesize_to_wav(text, language)
-    play_wav(audio_path)
+    if not has_voice(language):
+        print(f"[speech_out] no Piper voice for {language}, skipping audio")
+        return {"audio_path": None}
+
+    try:
+        audio_path = synthesize_to_wav(text, language)
+        play_wav(audio_path)
+    except Exception as exc:
+        # The text result is still good even if audio fails -- don't hide it
+        # behind state['error'], just skip the audio.
+        print(f"[speech_out] failed, text-only result: {exc}")
+        return {"audio_path": None}
 
     result = {"audio_path": audio_path}
     print(f"[speech_out] state out: {result}")

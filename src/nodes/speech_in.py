@@ -5,7 +5,7 @@ import sounddevice as sd
 from faster_whisper import WhisperModel
 from scipy.io.wavfile import write as write_wav
 
-from src.config import LANGUAGES, WHISPER_MODEL_SIZE
+from src.config import GENERIC_ERROR_MESSAGES, LANGUAGES, WHISPER_MODEL_SIZE
 from src.state import AssistantState
 
 SAMPLE_RATE = 16000
@@ -31,12 +31,21 @@ def record_audio(seconds: float = 6.0) -> str:
 def speech_in_node(state: AssistantState) -> dict:
     print(f"[speech_in] state in: {state}")
 
-    wav_path = record_audio()
-    language_code = LANGUAGES.get(state.get("target_language", ""), (None,))[0]
+    language = state.get("target_language", "Spanish")
 
-    model = _get_whisper_model()
-    segments, _ = model.transcribe(wav_path, language=language_code)
-    transcript = " ".join(segment.text.strip() for segment in segments)
+    try:
+        wav_path = record_audio()
+        language_code = LANGUAGES.get(language, (None,))[0]
+
+        model = _get_whisper_model()
+        segments, _ = model.transcribe(wav_path, language=language_code)
+        transcript = " ".join(segment.text.strip() for segment in segments)
+    except Exception as exc:
+        print(f"[speech_in] failed: {exc}")
+        return {"error": GENERIC_ERROR_MESSAGES.get(language, GENERIC_ERROR_MESSAGES["English"])}
+
+    if not transcript:
+        return {"error": GENERIC_ERROR_MESSAGES.get(language, GENERIC_ERROR_MESSAGES["English"])}
 
     result = {"user_request": transcript}
     print(f"[speech_in] state out: {result}")

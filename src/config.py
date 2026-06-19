@@ -34,8 +34,30 @@ LANGUAGES = {
 }
 
 
+def has_voice(language: str) -> bool:
+    return LANGUAGES[language][1] is not None
+
+
 def piper_model_path(language: str) -> str:
     _, voice_stem = LANGUAGES[language]
     if voice_stem is None:
         raise ValueError(f"No Piper voice configured for {language}")
     return os.path.join(PIPER_VOICES_DIR, f"{voice_stem}.onnx")
+
+
+# Generic "something went wrong" messages shown when a node fails, in each
+# supported language, so an error is never shown only in English to someone
+# who doesn't read it.
+GENERIC_ERROR_MESSAGES = {
+    "Spanish": "Algo salió mal. Por favor, inténtalo de nuevo.",
+    "Chinese": "出了点问题。请再试一次。",
+    "Vietnamese": "Đã xảy ra lỗi. Vui lòng thử lại.",
+    "Arabic": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    "Russian": "Что-то пошло не так. Пожалуйста, попробуйте снова.",
+    "French": "Quelque chose s'est mal passé. Veuillez réessayer.",
+    "Portuguese": "Algo deu errado. Por favor, tente novamente.",
+    "Hindi": "कुछ गलत हो गया। कृपया फिर से प्रयास करें।",
+    "Urdu": "کچھ غلط ہو گیا۔ براہ کرم دوبارہ کوشش کریں۔",
+    "Persian": "مشکلی پیش آمد. لطفاً دوباره تلاش کنید.",
+    "English": "Something went wrong. Please try again.",
+}

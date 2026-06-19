@@ -2,6 +2,7 @@
 __pycache__/
 *.pyc
 .env
+.pytest_cache/
 
 # Downloaded model weights -- large binaries, not source. Re-fetched via
 # requirements.txt comments (Ollama) and models/download_voices.sh (Piper).
