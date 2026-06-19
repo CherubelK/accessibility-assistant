@@ -19,6 +19,7 @@ SAMPLE_TEXT = (
 )
 
 
+@pytest.mark.requires_ollama
 def test_simplify_preserves_key_facts():
     result = simplify_node({"user_request": SAMPLE_TEXT, "target_language": "Spanish"})
 

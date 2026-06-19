@@ -1,0 +1,22 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  fast-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      # Only what's needed to import and run the fast/mocked tests -- not the
+      # full requirements.txt, which also pulls in audio/vision/GUI packages
+      # (sounddevice, piper-tts, pywebview, ...) that need system libraries
+      # this runner doesn't have and that the fast tests don't exercise.
+      - run: pip install langchain==1.3.10 langchain-core==1.4.8 langchain-ollama==1.1.0 python-dotenv==1.2.2 requests==2.34.2 pytest==9.1.0
+      # Only the mocked tests -- the rest call a real local Ollama model and
+      # aren't meant to run in CI (see tests/test_simplify.py docstring).
+      - run: python -m pytest tests/ -m "not requires_ollama" -v

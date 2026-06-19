@@ -60,9 +60,15 @@ Urdu, Persian, and English (text-only -- no Piper voice configured for it).
 .venv\Scripts\python.exe -m pytest tests/
 ```
 
-Tests call the real local `phi4-mini` model (no mocking -- this project's
-whole point is that everything actually runs locally), so they need Ollama
-running and are slower than typical unit tests.
+Most tests call the real local `phi4-mini` model (no mocking -- this
+project's whole point is that everything actually runs locally), so they
+need Ollama running and are slower than typical unit tests. The ones marked
+`@pytest.mark.requires_ollama` are skipped in CI (`.github/workflows/test.yml`);
+everything else runs there on every push:
+
+```
+.venv\Scripts\python.exe -m pytest tests/ -m "not requires_ollama"
+```
 
 ## Project layout
 
