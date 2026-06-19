@@ -34,8 +34,8 @@ flowchart TD
 
 | Model / lib | Role | Used in | Resident in RAM |
 |---|---|---|---|
-| `phi4-mini` | Fast text simplify/translate (dev loop) | `src/nodes/simplify.py` | one at a time |
-| `qwen3:8b` | Higher-quality text simplify/translate | `src/nodes/simplify.py` (swap-in) | one at a time |
+| `phi4-mini` | Fast text simplify/translate, selectable in the UI as "Fast" | `src/nodes/simplify.py` | one at a time |
+| `qwen3:8b` | Higher-quality text simplify/translate, selectable as "Higher quality" | `src/nodes/simplify.py` | one at a time |
 | `gemma3:12b` | Vision — reads screenshot layout/content. **Only called when OCR comes up short** (fallback, not the default path) -- it's ~1-2 minutes on CPU vs. OCR's near-instant, so OCR alone is used whenever it extracts enough text | `src/nodes/read_screen.py` | one at a time |
 | Tesseract OCR | Exact text extraction; the primary/fast path for `read_screen.py` | `src/nodes/read_screen.py` | n/a (CPU, not a model) |
 | faster-whisper | Speech-to-text (mic → `user_request`) | `src/nodes/speech_in.py` | one at a time |
@@ -79,6 +79,33 @@ which is how a session "remembers" earlier turns. `src/app.py` generates one
 written to disk -- memory is cleared when the process exits, consistent with
 the local-only, nothing-persists design.
 
+## Performance gotchas found during testing
+
+- **Qwen3 "thinking" mode.** `qwen3:8b` defaults to generating a full
+  chain-of-thought before its visible answer, which doesn't help (or show
+  up) for a direct simplify/translate task but adds huge latency (observed
+  172s vs. 21s for the same request). `src/nodes/simplify.py` passes
+  `reasoning=False` to `ChatOllama` to disable it.
+- **Ollama RAM contention.** Without `OLLAMA_MAX_LOADED_MODELS=1`, Ollama
+  keeps multiple models resident if there's room, causing severe slowdown
+  from memory pressure (84s vs. 17s -- see README Setup).
+- **Ollama's implicit `:latest` tag.** A model pulled without an explicit
+  tag (e.g. `phi4-mini`) is reported back by `/api/tags` as
+  `phi4-mini:latest`. `src/setup_check.py` strips this before comparing.
+
+## Safety net: form-number corruption
+
+Small CPU models occasionally garble alphanumeric identifiers while
+rephrasing -- observed `phi4-mini` turning "Form RRB-1099" into
+"Form RR-BR-1099" in roughly 1 of 5 runs. That's exactly the kind of fact
+corruption this project's "never invent/corrupt facts" principle exists to
+prevent, so it isn't left to the model: `src/nodes/simplify.py` extracts
+`Form <identifier>` patterns from the source text with a regex
+(`FORM_NUMBER_PATTERN`) and, if any are missing or altered in the model's
+output, appends them back verbatim (untranslated, since they're literal
+identifiers) under a translated label (`FORM_REFERENCE_LABEL` in
+`config.py`).
+
 ## Known limitations (intentional, not yet built)
 
 - **No human-in-the-loop confirmation gate.** The plan calls for one before
@@ -86,7 +113,7 @@ the local-only, nothing-persists design.
   perform any such action yet -- there's nothing for the gate to guard. Add
   it if/when a real submit-style action is introduced.
 - **Streaming** only covers the "Type" tab in `src/app.py` (direct
-  `simplify_chain.stream()` call). The voice and screen-reading tabs go
+  `get_chain(text_model).stream()` call). The voice and screen-reading tabs go
   through OCR/vision/STT first, so the wait is dominated by those steps, not
   token generation -- streaming there would add complexity for little
   visible benefit.

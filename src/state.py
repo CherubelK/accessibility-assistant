@@ -6,6 +6,7 @@ class AssistantState(TypedDict, total=False):
     user_request: str          # what the person asked (typed or transcribed)
     target_language: str       # e.g. "Spanish"
     screenshot_path: Optional[str]
+    text_model: str             # which Ollama model simplify.py should use (fast vs. quality)
 
     # routing flags (set by the caller, consumed by graph.route_start / route_after_simplify)
     capture_screen: bool        # True -> grab a live screenshot before reading it

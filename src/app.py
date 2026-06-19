@@ -2,9 +2,9 @@ import uuid
 
 import streamlit as st
 
-from src.config import GENERIC_ERROR_MESSAGES, LANGUAGES, has_voice
+from src.config import GENERIC_ERROR_MESSAGES, LANGUAGES, TEXT_MODEL_OPTIONS, has_voice
 from src.graph import graph
-from src.nodes.simplify import chain as simplify_chain
+from src.nodes.simplify import get_chain
 from src.nodes.speech_out import play_wav, synthesize_to_wav
 from src.setup_check import run_all_checks
 
@@ -26,6 +26,11 @@ if setup_problems:
     st.stop()
 
 language = st.selectbox("Translate into:", list(LANGUAGES.keys()), index=0)
+model_choice = st.radio(
+    "Speed:", list(TEXT_MODEL_OPTIONS.keys()), index=0, horizontal=True,
+    help="Fast is quicker; higher quality may explain more clearly but takes longer.",
+)
+text_model = TEXT_MODEL_OPTIONS[model_choice]
 
 if "result" not in st.session_state:
     st.session_state.result = None
@@ -77,7 +82,7 @@ with tab_text:
         try:
             # Stream tokens live instead of waiting for the full response.
             full_text = placeholder.write_stream(
-                simplify_chain.stream({"language": language, "source_text": text})
+                get_chain(text_model).stream({"language": language, "source_text": text})
             )
         except Exception as exc:
             print(f"[app] simplify streaming failed: {exc}")
@@ -95,6 +100,7 @@ with tab_voice:
             run_graph({
                 "record_voice": True,
                 "target_language": language,
+                "text_model": text_model,
                 "speak_output": True,
             }, request_summary="(spoken request)")
 
@@ -105,6 +111,7 @@ with tab_screen:
             run_graph({
                 "capture_screen": True,
                 "target_language": language,
+                "text_model": text_model,
                 "speak_output": True,
             }, request_summary="(screen reading)")
 

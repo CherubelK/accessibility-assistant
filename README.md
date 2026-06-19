@@ -46,7 +46,8 @@ together.
 
 Opens at `http://localhost:8501` (bound to localhost only). Three tabs:
 type text, speak into the mic, or read whatever's on your screen -- pick a
-target language and get a plain-language explanation back, spoken aloud.
+target language and a speed ("Fast" = `phi4-mini`, "Higher quality" =
+`qwen3:8b`), and get a plain-language explanation back, spoken aloud.
 
 ### As a desktop window
 

@@ -20,3 +20,24 @@ jobs:
       # Only the mocked tests -- the rest call a real local Ollama model and
       # aren't meant to run in CI (see tests/test_simplify.py docstring).
       - run: python -m pytest tests/ -m "not requires_ollama" -v
+
+  windows-build:
+    # Verifies the standalone .exe still builds on every push -- this broke
+    # silently more than once during development (Streamlit's dynamic script
+    # loading + frozen-app detection, see README "As a standalone .exe").
+    # Doesn't run the app (needs Ollama + real models), just confirms
+    # PyInstaller can produce the .exe without erroring.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements.txt
+      - run: pyinstaller desktop.spec --noconfirm
+      - run: |
+          if (-not (Test-Path "dist\AccessibilityAssistant\AccessibilityAssistant.exe")) {
+            Write-Error "Build did not produce AccessibilityAssistant.exe"
+            exit 1
+          }
+        shell: pwsh

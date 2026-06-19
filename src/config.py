@@ -11,6 +11,12 @@ TARGET_LANGUAGE = os.getenv("TARGET_LANGUAGE", "Spanish")
 VISION_MODEL = os.getenv("VISION_MODEL", "gemma3:12b")
 QUALITY_TEXT_MODEL = os.getenv("QUALITY_TEXT_MODEL", "qwen3:8b")
 
+# UI label -> Ollama model name, for the fast/quality toggle in app.py.
+TEXT_MODEL_OPTIONS = {
+    "Fast": DEFAULT_TEXT_MODEL,
+    "Higher quality (slower)": QUALITY_TEXT_MODEL,
+}
+
 # faster-whisper STT model size. "small" is a good CPU speed/accuracy
 # tradeoff on the target hardware (16GB RAM, no GPU).
 WHISPER_MODEL_SIZE = os.getenv("WHISPER_MODEL_SIZE", "small")
@@ -77,4 +83,24 @@ NO_SPEECH_DETECTED_MESSAGES = {
     "Urdu": "مجھے کچھ سنائی نہیں دیا۔ دوبارہ کوشش کریں اور واضح طور پر بولیں۔",
     "Persian": "چیزی نشنیدم. دوباره تلاش کنید و واضح صحبت کنید.",
     "English": "I didn't hear anything. Please try again and speak clearly.",
+}
+
+# Label for the verbatim form-number note appended by simplify.py when a
+# model garbles a form number (e.g. "RRB-1099" -> "RR-BR-1099") while
+# rephrasing -- observed with phi4-mini on CPU, non-deterministic, ~1 in 5
+# runs. The note re-states the exact string from the source, never
+# translated/rephrased, since this is specifically a safety net against the
+# model corrupting it.
+FORM_REFERENCE_LABEL = {
+    "Spanish": "Referencia exacta del original",
+    "Chinese": "原文中的确切编号",
+    "Vietnamese": "Tham chiếu chính xác từ bản gốc",
+    "Arabic": "المرجع الدقيق من النص الأصلي",
+    "Russian": "Точная ссылка из оригинала",
+    "French": "Référence exacte du document original",
+    "Portuguese": "Referência exata do original",
+    "Hindi": "मूल से सटीक संदर्भ",
+    "Urdu": "اصل سے درست حوالہ",
+    "Persian": "مرجع دقیق از سند اصلی",
+    "English": "Exact reference from the original",
 }

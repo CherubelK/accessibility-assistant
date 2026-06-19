@@ -9,7 +9,7 @@ running with phi4-mini pulled, and are slower than a typical unit test.
 import pytest
 
 from src.config import has_voice, piper_model_path
-from src.nodes.simplify import simplify_node
+from src.nodes.simplify import FORM_NUMBER_PATTERN, simplify_node
 
 SAMPLE_TEXT = (
     "Your application for benefits has been received. To avoid a lapse in "
@@ -44,3 +44,11 @@ def test_has_voice():
 def test_piper_model_path_raises_for_voiceless_language():
     with pytest.raises(ValueError):
         piper_model_path("English")
+
+
+def test_form_number_pattern_extracts_form_numbers():
+    assert FORM_NUMBER_PATTERN.findall(SAMPLE_TEXT) == ["RRB-1099"]
+
+
+def test_form_number_pattern_ignores_text_without_form_numbers():
+    assert FORM_NUMBER_PATTERN.findall("Please respond within 30 days.") == []
