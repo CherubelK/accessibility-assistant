@@ -5,7 +5,7 @@ import sounddevice as sd
 from faster_whisper import WhisperModel
 from scipy.io.wavfile import write as write_wav
 
-from src.config import GENERIC_ERROR_MESSAGES, LANGUAGES, WHISPER_MODEL_SIZE
+from src.config import GENERIC_ERROR_MESSAGES, LANGUAGES, NO_SPEECH_DETECTED_MESSAGES, WHISPER_MODEL_SIZE
 from src.state import AssistantState
 
 SAMPLE_RATE = 16000
@@ -45,7 +45,7 @@ def speech_in_node(state: AssistantState) -> dict:
         return {"error": GENERIC_ERROR_MESSAGES.get(language, GENERIC_ERROR_MESSAGES["English"])}
 
     if not transcript:
-        return {"error": GENERIC_ERROR_MESSAGES.get(language, GENERIC_ERROR_MESSAGES["English"])}
+        return {"error": NO_SPEECH_DETECTED_MESSAGES.get(language, NO_SPEECH_DETECTED_MESSAGES["English"])}
 
     result = {"user_request": transcript}
     print(f"[speech_in] state out: {result}")

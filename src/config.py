@@ -61,3 +61,20 @@ GENERIC_ERROR_MESSAGES = {
     "Persian": "مشکلی پیش آمد. لطفاً دوباره تلاش کنید.",
     "English": "Something went wrong. Please try again.",
 }
+
+# Shown specifically when the mic recorded nothing recognizable as speech --
+# distinct from GENERIC_ERROR_MESSAGES because this isn't a technical
+# failure, just "I didn't catch that."
+NO_SPEECH_DETECTED_MESSAGES = {
+    "Spanish": "No escuché nada. Inténtalo de nuevo y habla con claridad.",
+    "Chinese": "我没有听到任何内容。请再试一次,清楚地说话。",
+    "Vietnamese": "Tôi không nghe thấy gì. Vui lòng thử lại và nói rõ.",
+    "Arabic": "لم أسمع أي شيء. حاول مرة أخرى وتحدث بوضوح.",
+    "Russian": "Я ничего не услышал. Попробуйте снова и говорите чётко.",
+    "French": "Je n'ai rien entendu. Réessayez en parlant clairement.",
+    "Portuguese": "Não ouvi nada. Tente novamente e fale claramente.",
+    "Hindi": "मुझे कुछ सुनाई नहीं दिया। कृपया फिर से कोशिश करें और स्पष्ट रूप से बोलें।",
+    "Urdu": "مجھے کچھ سنائی نہیں دیا۔ دوبارہ کوشش کریں اور واضح طور پر بولیں۔",
+    "Persian": "چیزی نشنیدم. دوباره تلاش کنید و واضح صحبت کنید.",
+    "English": "I didn't hear anything. Please try again and speak clearly.",
+}
