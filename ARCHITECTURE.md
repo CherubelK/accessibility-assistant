@@ -106,12 +106,33 @@ output, appends them back verbatim (untranslated, since they're literal
 identifiers) under a translated label (`FORM_REFERENCE_LABEL` in
 `config.py`).
 
+## Human-in-the-loop confirmation gate
+
+Capturing the screen reads everything currently visible -- not just the
+document the user means to share, but any other open window, notification,
+etc. -- so it's gated by a confirmation step using LangGraph's `interrupt()`:
+
+- `confirm_screen_capture_node` (`src/nodes/capture_screen.py`) is the first
+  node on the `capture_screen` path. It calls `interrupt({"message": ...})`,
+  which pauses the graph; `graph.invoke()` returns
+  `{"__interrupt__": [Interrupt(value=...)]}` instead of a normal result.
+  The node does nothing else (no side effects), so it's safe to re-run on
+  resume, which is what LangGraph does.
+- `route_after_confirm` (`src/routing.py`) sends the graph to
+  `capture_screen` if `state["capture_confirmed"]` is `True`, otherwise to
+  `END` with a translated "cancelled" notice in `state["info"]`.
+- `src/app.py` detects the `__interrupt__` key, shows the message via
+  `st.warning` with Yes/Continue and Cancel buttons, and resumes with
+  `graph.invoke(Command(resume=True_or_False), config=graph_config)` --
+  the same `thread_id`-keyed checkpointer used for session memory is what
+  makes resuming the *same* paused run possible.
+
+No other action in the app is gated this way (yet) -- typing text, speaking,
+and speaking the result aloud don't read anything beyond what the user
+explicitly provided.
+
 ## Known limitations (intentional, not yet built)
 
-- **No human-in-the-loop confirmation gate.** The plan calls for one before
-  any consequential action (e.g. submitting a form), but this app doesn't
-  perform any such action yet -- there's nothing for the gate to guard. Add
-  it if/when a real submit-style action is introduced.
 - **Streaming** only covers the "Type" tab in `src/app.py` (direct
   `get_chain(text_model).stream()` call). The voice and screen-reading tabs go
   through OCR/vision/STT first, so the wait is dominated by those steps, not

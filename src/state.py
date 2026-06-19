@@ -22,5 +22,6 @@ class AssistantState(TypedDict, total=False):
     audio_path: Optional[str]  # path to spoken-version audio file
 
     # control / safety
-    needs_confirmation: bool   # gate before any consequential action
+    capture_confirmed: Optional[bool]  # resume value from the screen-capture confirmation gate
     error: Optional[str]
+    info: Optional[str]        # non-error notice, e.g. "capture cancelled"

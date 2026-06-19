@@ -393,7 +393,7 @@ it, you've learned it.
 | 2 | Same logic as a LangGraph pipeline | ☑ |
 | 3 | Screenshot + vision/OCR reading node | ☑ |
 | 4 | Voice in (Whisper) + voice out (Piper) | ☑ |
-| 5 | Human-in-the-loop, memory, streaming, UI | ☑ (memory + streaming + UI done; no HITL gate yet -- no consequential/submit action exists to guard) |
+| 5 | Human-in-the-loop, memory, streaming, UI | ☑ (all built -- HITL gate guards screen capture via LangGraph `interrupt()`, see ARCHITECTURE.md) |
 
 ---
 

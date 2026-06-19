@@ -8,16 +8,23 @@ from src.state import AssistantState
 
 def route_start(state: AssistantState) -> str:
     """Inputs converge on `simplify` (see PROJECT_PLAN.md diagram): a
-    screenshot (already provided or to be captured) goes through vision/OCR
-    first; a mic request goes through speech-to-text first; plain text
-    requests go straight to simplify."""
+    screenshot already provided (e.g. in tests) skips straight to
+    vision/OCR; one to be freshly captured goes through a human-in-the-loop
+    confirmation gate first (capturing the live screen reads everything
+    visible, not just the document the user means to share); a mic request
+    goes through speech-to-text first; plain text requests go straight to
+    simplify."""
     if state.get("screenshot_path"):
         return "read_screen"
     if state.get("capture_screen"):
-        return "capture_screen"
+        return "confirm_screen_capture"
     if state.get("record_voice"):
         return "speech_in"
     return "simplify"
+
+
+def route_after_confirm(state: AssistantState) -> str:
+    return "capture_screen" if state.get("capture_confirmed") else END
 
 
 def route_after_simplify(state: AssistantState) -> str:

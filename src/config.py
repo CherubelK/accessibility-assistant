@@ -104,3 +104,45 @@ FORM_REFERENCE_LABEL = {
     "Persian": "مرجع دقیق از سند اصلی",
     "English": "Exact reference from the original",
 }
+
+# Human-in-the-loop confirmation gate for capture_screen.py: taking a
+# screenshot reads everything currently visible, not just the document the
+# user means to share -- other open windows, notifications, etc. The app
+# pauses (via LangGraph's interrupt()) and asks before doing this.
+SCREEN_CAPTURE_CONFIRM_MESSAGES = {
+    "Spanish": "Esto leerá todo lo que esté visible en tu pantalla ahora mismo, "
+               "incluyendo otras ventanas abiertas. ¿Continuar?",
+    "Chinese": "这将读取您屏幕上当前显示的所有内容,包括其他打开的窗口。要继续吗?",
+    "Vietnamese": "Việc này sẽ đọc mọi thứ hiện đang hiển thị trên màn hình của bạn, "
+                  "bao gồm các cửa sổ khác đang mở. Tiếp tục?",
+    "Arabic": "سيقوم هذا بقراءة كل ما هو ظاهر حاليًا على شاشتك، بما في ذلك النوافذ "
+              "الأخرى المفتوحة. هل تريد المتابعة؟",
+    "Russian": "Это считает всё, что сейчас видно на экране, включая другие открытые "
+               "окна. Продолжить?",
+    "French": "Ceci va lire tout ce qui est actuellement visible sur votre écran, y "
+              "compris les autres fenêtres ouvertes. Continuer ?",
+    "Portuguese": "Isso vai ler tudo o que está visível na sua tela agora, incluindo "
+                  "outras janelas abertas. Continuar?",
+    "Hindi": "इससे आपकी स्क्रीन पर अभी दिख रही हर चीज़ पढ़ी जाएगी, जिसमें अन्य खुली "
+             "विंडो भी शामिल हैं। जारी रखें?",
+    "Urdu": "اس سے آپ کی اسکرین پر اس وقت نظر آنے والی ہر چیز پڑھی جائے گی، جس میں "
+            "دیگر کھلی ونڈوز بھی شامل ہیں۔ جاری رکھیں؟",
+    "Persian": "این کار همه چیزی را که اکنون روی صفحه شما نمایش داده می‌شود، از جمله "
+               "پنجره‌های باز دیگر، می‌خوانَد. ادامه می‌دهید؟",
+    "English": "This will read everything currently visible on your screen, including "
+               "other open windows. Continue?",
+}
+
+CAPTURE_CANCELLED_MESSAGES = {
+    "Spanish": "Cancelado. No se leyó la pantalla.",
+    "Chinese": "已取消。未读取屏幕。",
+    "Vietnamese": "Đã hủy. Màn hình chưa được đọc.",
+    "Arabic": "تم الإلغاء. لم تتم قراءة الشاشة.",
+    "Russian": "Отменено. Экран не был прочитан.",
+    "French": "Annulé. L'écran n'a pas été lu.",
+    "Portuguese": "Cancelado. A tela não foi lida.",
+    "Hindi": "रद्द किया गया। स्क्रीन नहीं पढ़ी गई।",
+    "Urdu": "منسوخ کر دیا گیا۔ اسکرین نہیں پڑھی گئی۔",
+    "Persian": "لغو شد. صفحه خوانده نشد.",
+    "English": "Cancelled. The screen was not read.",
+}

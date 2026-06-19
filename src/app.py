@@ -1,6 +1,7 @@
 import uuid
 
 import streamlit as st
+from langgraph.types import Command
 
 from src.config import GENERIC_ERROR_MESSAGES, LANGUAGES, TEXT_MODEL_OPTIONS, has_voice
 from src.graph import graph
@@ -36,12 +37,20 @@ if "result" not in st.session_state:
     st.session_state.result = None
 if "error" not in st.session_state:
     st.session_state.error = None
+if "info" not in st.session_state:
+    st.session_state.info = None
 if "history" not in st.session_state:
     st.session_state.history = []
 if "thread_id" not in st.session_state:
     # Ties every graph.invoke() in this browser session to the same
     # in-memory checkpointer thread, so the graph remembers earlier turns.
     st.session_state.thread_id = str(uuid.uuid4())
+if "pending_confirmation" not in st.session_state:
+    # Set when the graph pauses on a human-in-the-loop gate (currently just
+    # confirm_screen_capture_node) -- holds the message to show, until the
+    # user picks Yes/Cancel and we resume the graph with that answer.
+    st.session_state.pending_confirmation = None
+    st.session_state.pending_request_summary = None
 
 graph_config = {"configurable": {"thread_id": st.session_state.thread_id}}
 
@@ -54,8 +63,27 @@ def record_history(request_summary: str, response_text: str) -> None:
     })
 
 
+def _handle_graph_output(out: dict, request_summary: str) -> None:
+    if out.get("__interrupt__"):
+        st.session_state.pending_confirmation = out["__interrupt__"][0].value.get("message", "Continue?")
+        st.session_state.pending_request_summary = request_summary
+        return
+
+    st.session_state.pending_confirmation = None
+    st.session_state.pending_request_summary = None
+
+    if out.get("error"):
+        st.session_state.error = out["error"]
+    elif out.get("info"):
+        st.session_state.info = out["info"]
+    else:
+        st.session_state.result = out
+        record_history(request_summary, out["simplified_text"])
+
+
 def run_graph(initial_state: dict, request_summary: str) -> None:
     st.session_state.error = None
+    st.session_state.info = None
     st.session_state.result = None
     try:
         out = graph.invoke(initial_state, config=graph_config)
@@ -63,12 +91,21 @@ def run_graph(initial_state: dict, request_summary: str) -> None:
         print(f"[app] graph.invoke failed: {exc}")
         st.session_state.error = GENERIC_ERROR_MESSAGES.get(language, GENERIC_ERROR_MESSAGES["English"])
         return
+    _handle_graph_output(out, request_summary)
 
-    if out.get("error"):
-        st.session_state.error = out["error"]
-    else:
-        st.session_state.result = out
-        record_history(request_summary, out["simplified_text"])
+
+def resume_graph(confirmed: bool) -> None:
+    request_summary = st.session_state.pending_request_summary
+    st.session_state.error = None
+    st.session_state.info = None
+    try:
+        out = graph.invoke(Command(resume=confirmed), config=graph_config)
+    except Exception as exc:
+        print(f"[app] graph resume failed: {exc}")
+        st.session_state.error = GENERIC_ERROR_MESSAGES.get(language, GENERIC_ERROR_MESSAGES["English"])
+        st.session_state.pending_confirmation = None
+        return
+    _handle_graph_output(out, request_summary)
 
 
 tab_text, tab_voice, tab_screen = st.tabs(["Type", "Listen to me", "Read my screen"])
@@ -106,19 +143,39 @@ with tab_voice:
 
 with tab_screen:
     st.write("Reads whatever is currently shown on this screen.")
-    if st.button("Read my screen", key="read_screen"):
-        with st.spinner("Looking at your screen..."):
+    if st.session_state.pending_confirmation:
+        # Human-in-the-loop gate: capturing the screen reads everything
+        # currently visible, not just the document the user means to
+        # share, so the graph paused (confirm_screen_capture_node) and is
+        # waiting for an explicit Yes/Cancel before capture_screen_node runs.
+        st.warning(st.session_state.pending_confirmation)
+        col_yes, col_no = st.columns(2)
+        with col_yes:
+            if st.button("Yes, continue", key="confirm_capture_yes"):
+                with st.spinner("Looking at your screen..."):
+                    resume_graph(True)
+                st.rerun()
+        with col_no:
+            if st.button("Cancel", key="confirm_capture_no"):
+                resume_graph(False)
+                st.rerun()
+    elif st.button("Read my screen", key="read_screen"):
+        with st.spinner("Checking..."):
             run_graph({
                 "capture_screen": True,
                 "target_language": language,
                 "text_model": text_model,
                 "speak_output": True,
             }, request_summary="(screen reading)")
+        st.rerun()
 
 st.divider()
 
 if st.session_state.error:
     st.error(st.session_state.error)
+
+if st.session_state.info:
+    st.info(st.session_state.info)
 
 if st.session_state.result:
     st.subheader("Plain-language explanation")
