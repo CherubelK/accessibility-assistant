@@ -73,6 +73,7 @@ src/
   graph.py              LangGraph pipeline wiring
   app.py                Streamlit homepage
   desktop.py            runs the homepage in a native window (pywebview)
+  setup_check.py         pre-flight check (Ollama reachable, models/voices present)
   nodes/
     capture_screen.py    screenshot capture (mss)
     read_screen.py        vision (gemma3:12b) + OCR (Tesseract)

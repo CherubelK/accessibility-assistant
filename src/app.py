@@ -6,6 +6,7 @@ from src.config import GENERIC_ERROR_MESSAGES, LANGUAGES, has_voice
 from src.graph import graph
 from src.nodes.simplify import chain as simplify_chain
 from src.nodes.speech_out import play_wav, synthesize_to_wav
+from src.setup_check import run_all_checks
 
 st.set_page_config(page_title="Accessibility Assistant", layout="centered")
 
@@ -14,6 +15,15 @@ st.caption(
     "Everything runs locally on this computer using open-source models. "
     "Nothing is sent to the cloud."
 )
+
+setup_problems = run_all_checks()
+if setup_problems:
+    st.warning("Before you can use this, a few things need to be set up:")
+    for problem in setup_problems:
+        st.write(f"- {problem}")
+    if st.button("I've fixed it -- check again"):
+        st.rerun()
+    st.stop()
 
 language = st.selectbox("Translate into:", list(LANGUAGES.keys()), index=0)
 
