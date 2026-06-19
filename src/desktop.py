@@ -76,7 +76,9 @@ def main() -> None:
     threading.Thread(target=_run_streamlit, daemon=True).start()
     _wait_for_server(PORT)
     webview.create_window("Accessibility Assistant", f"http://localhost:{PORT}", width=900, height=750)
-    webview.start()
+
+    icon_path = os.path.join(os.path.dirname(__file__), "..", "assets", "icon.ico")
+    webview.start(icon=icon_path if os.path.exists(icon_path) else None)
 
 
 if __name__ == "__main__":

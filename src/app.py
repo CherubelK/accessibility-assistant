@@ -8,7 +8,7 @@ from src.nodes.simplify import chain as simplify_chain
 from src.nodes.speech_out import play_wav, synthesize_to_wav
 from src.setup_check import run_all_checks
 
-st.set_page_config(page_title="Accessibility Assistant", layout="centered")
+st.set_page_config(page_title="Accessibility Assistant", page_icon="assets/icon.png", layout="centered")
 
 st.title("Accessibility Assistant")
 st.caption(

@@ -25,7 +25,7 @@ for pkg in [
     binaries += pkg_binaries
     hiddenimports += pkg_hiddenimports
 
-datas += [("src/app.py", "src"), ("models/piper", "models/piper")]
+datas += [("src/app.py", "src"), ("models/piper", "models/piper"), ("assets/icon.ico", "assets")]
 
 a = Analysis(
     ["src/desktop.py"],
@@ -44,6 +44,7 @@ exe = EXE(
     exclude_binaries=True,
     name="AccessibilityAssistant",
     console=True,  # keep visible while debugging; flip to False once stable
+    icon="assets/icon.ico",
 )
 coll = COLLECT(
     exe,
