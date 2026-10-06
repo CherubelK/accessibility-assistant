@@ -1,5 +1,7 @@
 # Accessibility Assistant
 
+[![tests](https://github.com/CherubelK/accessibility-assistant/actions/workflows/test.yml/badge.svg)](https://github.com/CherubelK/accessibility-assistant/actions/workflows/test.yml)
+
 A local-first assistant that reads, simplifies, and translates official text
 and screens for elders and immigrants -- by text and voice, in 10 languages.
 Everything runs on your own machine using open-source models. Nothing is
